@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+
+import argparse
+import ipaddress
+import socketserver
+import socket
+import datetime
+
+server_port = 43454
+listen_ip = "0.0.0.0"  # ip address these server will listen on
+pubkey_len = 44
+
+# server usage example:
+# wg-request --serve serverpublickey 10.32.40.0
+
+parser = argparse.ArgumentParser(description=f'helps with wireguard client peer provisioning')
+
+parser.add_argument('-s', '--serve', action="store_true",
+                    help='runs in server mode')
+
+parser.add_argument('pubkey', type=str,
+                    help="the client peer's public key (or the server's if running in server mode)")
+
+parser.add_argument('arg', type=str,
+                    help="The server's address (or the first available IP address if running in server mode)")
+
+args = parser.parse_args()
+
+def accept(sock):
+  conn, addr = sock.accept()  # accept the initial connection
+  print('Accepted new connection: {:} from ip {:}'.format(conn, addr))
+  conn.setblocking(False)
+  sel.register(conn, socketserver.selectors.EVENT_READ, get_data)
+  return conn
+
+def get_data(conn):
+  data = conn.recv(1024)  # Should be ready
+  if data:
+    pass
+  else:
+    #print('closing', conn)
+    sel.unregister(conn)
+    conn.close()
+  return (conn, data)
+
+def setupServer(listen_ip, listen_port):
+  server = socketserver.TCPServer((listen_ip, listen_port), socketserver.StreamRequestHandler, bind_and_activate = False)
+  server.timeout = None  # never timeout when waiting for connection
+  server.allow_reuse_address = True
+  server.server_bind()
+  server.server_activate()
+  return server
+
+
+if args.serve == True:  # server mode, run in this mode to tell potential client peers your public key and what IP address to use
+    next_address = ipaddress.ip_address(args.arg)
+
+    sel = socketserver.selectors.DefaultSelector()
+
+    srv = setupServer(listen_ip, server_port)
+    sel.register(srv.socket, socketserver.selectors.EVENT_READ, accept)
+
+    print(f'Wireguard request server started listening on port {server_port}')
+    while True:
+        events = sel.select()
+        for key, mask in events:
+            callback = key.data
+            callback_return = callback(key.fileobj)
+            if type(callback_return) == socketserver.socket.socket:
+                # this was a new connection
+                conn = callback_return
+                #port = conn.getsockname()[1]
+            else:
+                # this was not a new connection (either disconnect or new data)
+                conn, data = callback_return
+                if (not conn._closed) and (len(data) == pubkey_len):
+                    client_key = data.decode()
+                    print(f'Someone sent us 44 bytes @ {datetime.datetime.now()}')
+                    try:
+                        message = args.pubkey+str(next_address)
+                        conn.sendall(message.encode())
+                        print("[Peer]")
+                        print("# who?")
+                        print(f'PublicKey = {client_key}')
+                        print(f'AllowedIPs = {next_address}/24')
+                        print()
+                    except:
+                        print('WARNING: Unable to answer.')
+                    try:
+                        next_address += 1 # this crashes when it runs out!
+                    except:
+                        raise(ValueError('Out of addresses.'))
+else: # client mode run in this mode to get the server's public key and the next available IP
+    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+
+    try:
+        # Connect to server and send data
+        sock.connect((args.arg, server_port))
+        sock.sendall(args.pubkey.encode())
+
+        # Receive data from the server and shut down
+        result = sock.recv(1024).decode()
+        rltlen = len(result)
+        if rltlen >= (pubkey_len+7):
+            server_key = result[:pubkey_len]
+            my_ip = ipaddress.ip_address(result[pubkey_len:])
+            print("[Interface]")
+            print(f"Address = {my_ip}/24")
+            print()
+            print("[Peer]")
+            print(f"PublicKey = {server_key}")
+            print(f"Endpoint = {args.arg}:15820")
+    finally:
+        sock.close()
+
