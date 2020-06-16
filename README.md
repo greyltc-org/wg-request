@@ -20,7 +20,7 @@ Address = 10.32.3.4/24
 PublicKey = RNveEHSE4Ky+4X0aybFz5W42NAIvTv+GB4iSv3UAZAM=
 Endpoint = wireguardvpnserver.motorcycles:15820
 ```
-:tada: Look what you got back! A configuration snippit you can use to configure your peer to join person A's network! Let's hope they let you in!
+:tada: Look what you got back! A configuration snippet you can use to configure your peer to join person A's network! Let's hope they let you in!
 
 ### Server
 Now imagine you're person A again. You look at your terminal and see someone has requested to join your network:
@@ -34,4 +34,4 @@ Someone sent us 44 bytes @ 2020-06-16 09:23:45.007359
 PublicKey = Wpu83JMdnaJVGsrZeOJ4PZbdajRXzE0KVhLcvGEXLBg=
 AllowedIPs = 10.32.3.4/24
 ```
-Maybe you see enough info there to decide if you want to cofigure your configure your peer to let them join.
+Maybe you see enough info there to decide if you want to configure your peer to let them join.
