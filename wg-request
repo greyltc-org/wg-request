@@ -5,6 +5,7 @@ import ipaddress
 import socketserver
 import socket
 import datetime
+import sys
 
 server_port = 43454
 listen_ip = "0.0.0.0"  # ip address these server will listen on
@@ -27,9 +28,12 @@ parser.add_argument('arg', type=str,
 
 args = parser.parse_args()
 
+def eprint(*args, **kwargs):
+    print(*args, file=sys.stderr, **kwargs)
+
 def accept(sock):
   conn, addr = sock.accept()  # accept the initial connection
-  print('Accepted new connection: {:} from ip {:}'.format(conn, addr))
+  eprint('Accepted new connection: {:} from ip {:}'.format(conn, addr))
   conn.setblocking(False)
   sel.register(conn, socketserver.selectors.EVENT_READ, get_data)
   return conn
@@ -39,7 +43,7 @@ def get_data(conn):
   if data:
     pass
   else:
-    #print('closing', conn)
+    #eprint('closing', conn)
     sel.unregister(conn)
     conn.close()
   return (conn, data)
@@ -61,7 +65,7 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
     srv = setupServer(listen_ip, server_port)
     sel.register(srv.socket, socketserver.selectors.EVENT_READ, accept)
 
-    print(f'Wireguard request server started listening on port {server_port}')
+    eprint(f'Wireguard request server started listening on port {server_port}')
     while True:
         events = sel.select()
         for key, mask in events:
@@ -76,7 +80,7 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                 conn, data = callback_return
                 if (not conn._closed) and (len(data) == pubkey_len):
                     client_key = data.decode()
-                    print(f'Someone sent us 44 bytes @ {datetime.datetime.now()}')
+                    eprint(f'Someone sent us 44 bytes @ {datetime.datetime.now()}')
                     try:
                         message = args.pubkey+str(next_address)
                         conn.sendall(message.encode())
@@ -86,7 +90,7 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                         print(f'AllowedIPs = {next_address}/{CIDR}')
                         print()
                     except:
-                        print('WARNING: Unable to answer.')
+                        eprint('WARNING: Unable to answer.')
                     try:
                         next_address += 1 # this crashes when it runs out!
                     except:
@@ -107,6 +111,7 @@ else: # client mode run in this mode to get the server's public key and the next
             my_ip = ipaddress.ip_address(result[pubkey_len:])
             print("[Interface]")
             print(f"Address = {my_ip}/{CIDR}")
+            print("PrivateKey = ")
             print()
             print("[Peer]")
             print(f"PublicKey = {server_key}")
