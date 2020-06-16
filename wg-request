@@ -88,6 +88,7 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                         print("# who?")
                         print(f'PublicKey = {client_key}')
                         print(f'AllowedIPs = {next_address}/32')
+                        print("PersistentKeepalive = 25")
                         print()
                     except:
                         eprint('WARNING: Unable to answer.')
@@ -118,6 +119,7 @@ else: # client mode run in this mode to get the server's public key and the next
             print("# who?")
             print(f"PublicKey = {server_key}")
             print(f"AllowedIPs = {my_ip}/32, {my_network}")
+            print("PersistentKeepalive = 25")
             print(f"Endpoint = {args.arg}:15820")
     finally:
         sock.close()
