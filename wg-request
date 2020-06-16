@@ -84,11 +84,10 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                     try:
                         message = args.pubkey+str(next_address)
                         conn.sendall(message.encode())
-                        my_network = ipaddress.ip_network(str(next_address)+'/'+CIDR, strict=False)
                         print("[Peer]")
                         print("# who?")
                         print(f'PublicKey = {client_key}')
-                        print(f'AllowedIPs = {next_address}/32, {my_network}')
+                        print(f'AllowedIPs = {next_address}/32')
                         print()
                     except:
                         eprint('WARNING: Unable to answer.')
