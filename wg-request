@@ -110,7 +110,7 @@ else: # client mode run in this mode to get the server's public key and the next
             print()
             print("[Peer]")
             print(f"PublicKey = {server_key}")
-            print(f"AllowedIPs = {ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False).hosts().__next()}/{CIDR}")
+            print(f"AllowedIPs = {ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False).hosts().__next__()}/{CIDR}")
             print(f"Endpoint = {args.arg}:15820")
     finally:
         sock.close()
