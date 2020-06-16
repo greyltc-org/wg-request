@@ -84,10 +84,11 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                     try:
                         message = args.pubkey+str(next_address)
                         conn.sendall(message.encode())
+                        my_network = ipaddress.ip_network(str(next_address)+'/'+CIDR, strict=False)
                         print("[Peer]")
                         print("# who?")
                         print(f'PublicKey = {client_key}')
-                        print(f'AllowedIPs = {next_address}/{CIDR}')
+                        print(f'AllowedIPs = {next_address}/32, {my_network}')
                         print()
                     except:
                         eprint('WARNING: Unable to answer.')
@@ -109,6 +110,7 @@ else: # client mode run in this mode to get the server's public key and the next
         if rltlen >= (pubkey_len+7):
             server_key = result[:pubkey_len]
             my_ip = ipaddress.ip_address(result[pubkey_len:])
+            my_network = ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False)
             print("[Interface]")
             print(f"Address = {my_ip}/{CIDR}")
             print("PrivateKey = ")
@@ -116,8 +118,7 @@ else: # client mode run in this mode to get the server's public key and the next
             print("[Peer]")
             print("# who?")
             print(f"PublicKey = {server_key}")
-            print(f"AllowedIPs = {ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False).hosts().__next__()}/{CIDR}")
+            print(f"AllowedIPs = {my_ip}/32, {my_network}")
             print(f"Endpoint = {args.arg}:15820")
     finally:
         sock.close()
-
