@@ -9,6 +9,7 @@ import datetime
 server_port = 43454
 listen_ip = "0.0.0.0"  # ip address these server will listen on
 pubkey_len = 44
+CIDR = '24'
 
 # server usage example:
 # wg-request --serve serverpublickey 10.32.40.0
@@ -82,7 +83,7 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                         print("[Peer]")
                         print("# who?")
                         print(f'PublicKey = {client_key}')
-                        print(f'AllowedIPs = {next_address}/24')
+                        print(f'AllowedIPs = {next_address}/{CIDR}')
                         print()
                     except:
                         print('WARNING: Unable to answer.')
@@ -105,10 +106,11 @@ else: # client mode run in this mode to get the server's public key and the next
             server_key = result[:pubkey_len]
             my_ip = ipaddress.ip_address(result[pubkey_len:])
             print("[Interface]")
-            print(f"Address = {my_ip}/24")
+            print(f"Address = {my_ip}/{CIDR}")
             print()
             print("[Peer]")
             print(f"PublicKey = {server_key}")
+            print(f"AllowedIPs = {list(ip_network(my_ip+'/'+CIDR).hosts())[0]}/{CIDR}")
             print(f"Endpoint = {args.arg}:15820")
     finally:
         sock.close()
