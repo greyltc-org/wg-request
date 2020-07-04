@@ -7,7 +7,7 @@ import socket
 import datetime
 import sys
 
-server_port = 43454
+this_server_port = 43454
 listen_ip = "0.0.0.0"  # ip address these server will listen on
 pubkey_len = 44
 CIDR = '24'
@@ -15,7 +15,16 @@ CIDR = '24'
 # server usage example:
 # wg-request --serve serverpublickey 10.32.40.0
 
+# client usage example:
+# wg-request clientpublickey server.host.name
+
 parser = argparse.ArgumentParser(description=f'helps with wireguard client peer provisioning')
+
+parser.add_argument('-p', '--port', type=str, default='15820',
+                    help='insert this wg server port into the client config file')
+
+parser.add_argument('-k', '--private-key', type=str, default='',
+                    help='insert this private key into the client config file')
 
 parser.add_argument('-s', '--serve', action="store_true",
                     help='runs in server mode')
@@ -62,10 +71,10 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
 
     sel = socketserver.selectors.DefaultSelector()
 
-    srv = setupServer(listen_ip, server_port)
+    srv = setupServer(listen_ip, this_server_port)
     sel.register(srv.socket, socketserver.selectors.EVENT_READ, accept)
 
-    eprint(f'Wireguard request server started listening on port {server_port}')
+    eprint(f'Wireguard request server started listening on port {this_server_port}')
     while True:
         events = sel.select()
         for key, mask in events:
@@ -100,7 +109,7 @@ else: # client mode run in this mode to get the server's public key and the next
 
     try:
         # Connect to server and send data
-        sock.connect((args.arg, server_port))
+        sock.connect((args.arg, this_server_port))
         sock.sendall(args.pubkey.encode())
 
         # Receive data from the server and shut down
@@ -112,13 +121,13 @@ else: # client mode run in this mode to get the server's public key and the next
             my_network = ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False)
             print("[Interface]")
             print(f"Address = {my_ip}/{CIDR}")
-            print("PrivateKey = ")
+            print(f"PrivateKey = {args.private_key}")
             print()
             print("[Peer]")
-            print("# who?")
+            print("# who? (the server)")
             print(f"PublicKey = {server_key}")
-            print(f"AllowedIPs = {my_ip}/32, {my_network}")
+            print(f"AllowedIPs = {my_network.network_address+1}/32, {my_network}")
             print("PersistentKeepalive = 25")
-            print(f"Endpoint = {args.arg}:15820")
+            print(f"Endpoint = {args.arg}:{args.port}")
     finally:
         sock.close()
