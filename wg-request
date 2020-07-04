@@ -16,7 +16,7 @@ CIDR = '24'
 # wg-request --serve serverpublickey 10.32.40.0
 
 # client usage example:
-# wg-request clientpublickey server.host.name
+# wg-request --port 15820 --private-key clientprivatekey clientpublickey server.host.name
 
 parser = argparse.ArgumentParser(description=f'helps with wireguard client peer provisioning')
 
