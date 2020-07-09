@@ -7,10 +7,10 @@ a tool to help you with wireguard client peer provisioning, exchanges public key
 TLDR:
 ```
 # on the server:
-python3 <(curl -L https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request) --serve ${SERVER_PUB_KEY} first.available.ip.address
+curl -Ls https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request | python3 - --serve ${SERVER_PUB_KEY} first.available.ip.address
 
 # on the client:
-sudo bash <(curl -L https://raw.githubusercontent.com/greyltc/wg-request/master/join-wg.sh) ${SERVER_ADDRESS} [${WG_SERVER_PORT}] [${WG_INTERFACE}] 
+sudo su -c "curl -Ls https://raw.githubusercontent.com/greyltc/wg-request/master/join-wg.sh | bash /dev/stdin ${SERVER_ADDRESS} [${WG_SERVER_PORT}] [${WG_INTERFACE}]"
 ```
 ### Server
 Imagine you're person A, and you're running a wireguard peer that you'd like to act as a traditional VPN server. You know your public key for that peer is `RNveEHSE4Ky+4X0aybFz5W42NAIvTv+GB4iSv3UAZAM=`. Also imagine you have an address space available for new client peers to join your network that begins at 10.32.3.4. You should run:
