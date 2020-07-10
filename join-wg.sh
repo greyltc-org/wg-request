@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+# this script depends on wireguard-tools, python3 and curl
+
 if test $EUID -ne 0
 then
   echo "Please run with root permissions"
@@ -10,7 +12,6 @@ PEER=${1:-google.com}
 PORT=${2:-51820}
 IFACE=${3:-wg0}
 
-pacman -S --needed --noconfirm python wireguard-tools curl >/dev/null 2>/dev/null
 curl -fsSL -o /bin/wg-request https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request >/dev/null 2>/dev/null
 chmod +x /bin/wg-request >/dev/null 2>/dev/null
 
