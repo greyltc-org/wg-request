@@ -89,10 +89,12 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                 conn, data = callback_return
                 if (not conn._closed) and (len(data) == pubkey_len):
                     client_key = data.decode()
+                    print()
                     eprint(f'Someone sent us 44 bytes @ {datetime.datetime.now()}')
+                    print()
                     try:
                         message = f"{args.pubkey}{next_address},{args.port}"
-                        conn.sendall(message.encode()) # send away public key, client address and server port
+                        conn.sendall(message.encode()) # send away our public key, the address the client should use and our server port
                         print("[Peer]")
                         print("# who?")
                         print(f'PublicKey = {client_key}')
