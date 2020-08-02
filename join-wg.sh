@@ -9,14 +9,13 @@ then
 fi
 
 PEER=${1:-google.com}
-PORT=${2:-51820}
-IFACE=${3:-wg0}
+IFACE=${2:-wg0}
 
 curl -fsSL -o /bin/wg-request https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request >/dev/null 2>/dev/null
 chmod +x /bin/wg-request >/dev/null 2>/dev/null
 
 wg genkey | tee /tmp/peer_A.key | wg pubkey > /tmp/peer_A.pub
-timeout 5 python3 /bin/wg-request --port "${PORT}" --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/dev/null
+timeout 5 python3 /bin/wg-request --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/dev/null
 wg-quick down "${IFACE}" >/dev/null 2>/dev/null
 wg-quick up "${IFACE}" >/dev/null 2>/dev/null
 systemctl enable "wg-quick@${IFACE}" >/dev/null 2>/dev/null
