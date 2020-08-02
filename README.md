@@ -7,15 +7,15 @@ a tool to help you with wireguard client peer provisioning, exchanges public key
 TLDR:
 ```
 # on the server:
-curl -Ls https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request | python3 - --serve ${SERVER_PUB_KEY} first.available.ip.address
+curl -Ls https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request | python3 - --serve --port ${WG_PORT} ${SERVER_PUB_KEY} first.available.ip.address
 
 # on the client:
-sudo su -c "curl -Ls https://raw.githubusercontent.com/greyltc/wg-request/master/join-wg.sh | bash /dev/stdin ${SERVER_ADDRESS} [${WG_SERVER_PORT}] [${WG_INTERFACE}]"
+sudo su -c "curl -Ls https://raw.githubusercontent.com/greyltc/wg-request/master/join-wg.sh | bash /dev/stdin ${SERVER_ADDRESS} [${WG_INTERFACE}]"
 ```
 ### Server
-Imagine you're person A, and you're running a wireguard peer that you'd like to act as a traditional VPN server. You know your public key for that peer is `RNveEHSE4Ky+4X0aybFz5W42NAIvTv+GB4iSv3UAZAM=`. Also imagine you have an address space available for new client peers to join your network that begins at 10.32.3.4. You should run:
+Imagine you're person A, and you're running a wireguard peer that you'd like to act as a traditional VPN server. You know your public key for that peer is `RNveEHSE4Ky+4X0aybFz5W42NAIvTv+GB4iSv3UAZAM=`. Also imagine you have an address space available for new client peers to join your network that begins at 10.32.3.4. If your peer listens on port 51820, you should run:
 ```bash
-$ ./wg-request --serve RNveEHSE4Ky+4X0aybFz5W42NAIvTv+GB4iSv3UAZAM= 10.32.3.4
+$ ./wg-request --serve --port 51820 RNveEHSE4Ky+4X0aybFz5W42NAIvTv+GB4iSv3UAZAM= 10.32.3.4
 Wireguard request server started listening on port 43454
 ```
 
@@ -44,4 +44,4 @@ Someone sent us 44 bytes @ 2020-06-16 09:23:45.007359
 PublicKey = Wpu83JMdnaJVGsrZeOJ4PZbdajRXzE0KVhLcvGEXLBg=
 AllowedIPs = 10.32.3.4/24
 ```
-Maybe you see enough info there to decide if you want to configure your peer to let them join.
+Maybe you see enough info there to decide if you want to configure your peer to let them join. You even got a little snippet to make it easier to add them if you'd like! 
