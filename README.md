@@ -1,6 +1,6 @@
 # wg-request
 a tool to help you with wireguard client peer provisioning, exchanges public keys and kinda manages IP addresses  
-`join-wg.sh` -- client side bash wrapper  
+`join-wg.sh` -- client side bash wrapper/helper  
 `wg-request` -- the tool. python script. handles both client and sever side
 
 ## Usage
