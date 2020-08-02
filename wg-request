@@ -7,8 +7,8 @@ import socket
 import datetime
 import sys
 
-this_server_port = 43454
-listen_ip = "0.0.0.0"  # ip address these server will listen on
+this_server_port = 43454  # port that the wg-request server listens on
+listen_ip = "0.0.0.0"  # ip address the wg-request server will listen on
 pubkey_len = 44
 CIDR = '24'
 
@@ -21,7 +21,7 @@ CIDR = '24'
 parser = argparse.ArgumentParser(description=f'helps with wireguard client peer provisioning')
 
 parser.add_argument('-p', '--port', type=str, default='15820',
-                    help='insert this wg server port into the client config file')
+                    help='the port the wireguard server is running on')
 
 parser.add_argument('-k', '--private-key', type=str, default='',
                     help='insert this private key into the client config file')
@@ -91,8 +91,8 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                     client_key = data.decode()
                     eprint(f'Someone sent us 44 bytes @ {datetime.datetime.now()}')
                     try:
-                        message = args.pubkey+str(next_address)
-                        conn.sendall(message.encode())
+                        message = f"{args.pubkey}{next_address},{args.port}"
+                        conn.sendall(message.encode()) # send away public key, client address and server port
                         print("[Peer]")
                         print("# who?")
                         print(f'PublicKey = {client_key}')
@@ -104,7 +104,7 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                         next_address += 1 # this crashes when it runs out!
                     except:
                         raise(ValueError('Out of addresses.'))
-else: # client mode run in this mode to get the server's public key and the next available IP
+else: # client mode. run in this mode to get: the server's public key, the next available IP and the server's listening port
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
     try:
@@ -117,8 +117,12 @@ else: # client mode run in this mode to get the server's public key and the next
         rltlen = len(result)
         if rltlen >= (pubkey_len+7):
             server_key = result[:pubkey_len]
-            my_ip = ipaddress.ip_address(result[pubkey_len:])
+            not_server_key = result[pubkey_len:]
+            my_ip, server_port = not_server_key.split(',')
+            my_ip = ipaddress.ip_address(my_ip)  # convert to ip
+            server_port = int(server_port)
             my_network = ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False)
+            wg_server = args.arg  # wg_server must run on the same host as wg-request server
             print("[Interface]")
             print(f"Address = {my_ip}/{CIDR}")
             print(f"PrivateKey = {args.private_key}")
@@ -128,6 +132,6 @@ else: # client mode run in this mode to get the server's public key and the next
             print(f"PublicKey = {server_key}")
             print(f"AllowedIPs = {my_network.network_address+1}/32, {my_network}")
             print("PersistentKeepalive = 25")
-            print(f"Endpoint = {args.arg}:{args.port}")
+            print(f"Endpoint = {wg_server}:{server_port}")
     finally:
         sock.close()
