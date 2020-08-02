@@ -82,6 +82,7 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
             callback_return = callback(key.fileobj)
             if type(callback_return) == socketserver.socket.socket:
                 # this was a new connection
+                print()
                 conn = callback_return
                 #port = conn.getsockname()[1]
             else:
@@ -89,7 +90,6 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                 conn, data = callback_return
                 if (not conn._closed) and (len(data) == pubkey_len):
                     client_key = data.decode()
-                    print()
                     eprint(f'Someone sent us 44 bytes @ {datetime.datetime.now()}')
                     print()
                     try:
