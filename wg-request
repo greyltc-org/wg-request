@@ -135,5 +135,10 @@ else: # client mode. run in this mode to get: the server's public key, the next 
             print(f"AllowedIPs = {my_network.network_address+1}/32, {my_network}")
             print("PersistentKeepalive = 25")
             print(f"Endpoint = {wg_server}:{server_port}")
+    except:
+      ret_code = 1
+    else:
+      ret_code = 0
     finally:
         sock.close()
+        sys.exit(ret_code)
