@@ -25,6 +25,12 @@ chmod +x /bin/wg-request >/dev/null 2>/dev/null
 
 wg genkey | tee /tmp/peer_A.key | wg pubkey > /tmp/peer_A.pub
 timeout 5 python3 /bin/wg-request --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/dev/null
+if test -z "$?"
+then
+  echo "New config written to /etc/wireguard/${IFACE}.conf"
+else
+  echo "New config NOT written to /etc/wireguard/${IFACE}.conf"
+fi
 wg-quick down "${IFACE}" >/dev/null 2>/dev/null
 wg-quick up "${IFACE}" >/dev/null 2>/dev/null
 systemctl enable "wg-quick@${IFACE}" >/dev/null 2>/dev/null
