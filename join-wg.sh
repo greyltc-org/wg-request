@@ -25,8 +25,7 @@ chmod +x /bin/wg-request >/dev/null 2>/dev/null
 
 wg genkey | tee /tmp/peer_A.key | wg pubkey > /tmp/peer_A.pub
 timeout 5 python3 /bin/wg-request --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/dev/null
-echo "rtc = ${?}"
-if test -z "$?"
+if test "$?" -ne "0"
 then
   echo "New config written to /etc/wireguard/${IFACE}.conf"
   cat "/etc/wireguard/${IFACE}.conf"
