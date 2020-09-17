@@ -28,6 +28,7 @@ timeout 5 python3 /bin/wg-request --private-key $(cat /tmp/peer_A.key) $(cat /tm
 if test -z "$?"
 then
   echo "New config written to /etc/wireguard/${IFACE}.conf"
+  cat "/etc/wireguard/${IFACE}.conf"
 else
   echo "New config NOT written to /etc/wireguard/${IFACE}.conf"
 fi
