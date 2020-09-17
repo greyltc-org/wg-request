@@ -8,6 +8,14 @@ then
   exit 1
 fi
 
+if test -z "${2}"
+then
+  if test -f /etc/wireguard/wg0.conf
+  then
+    echo "/etc/wireguard/wg0.conf already exists. You must specify an interface manually"
+  fi
+fi
+
 PEER=${1:-google.com}
 IFACE=${2:-wg0}
 
