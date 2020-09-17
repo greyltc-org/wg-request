@@ -13,6 +13,7 @@ then
   if test -f /etc/wireguard/wg0.conf
   then
     echo "/etc/wireguard/wg0.conf already exists. You must specify an interface manually"
+    exit 2
   fi
 fi
 
