@@ -6,11 +6,13 @@ import socketserver
 import socket
 import datetime
 import sys
+import time
 
 this_server_port = 43454  # port that the wg-request server listens on
 listen_ip = "0.0.0.0"  # ip address the wg-request server will listen on
 pubkey_len = 44
 CIDR = '24'
+connection_timeout_s = 60  # try to connect for this many seconds in client mode
 
 # server usage example:
 # wg-request --serve serverpublickey 10.32.40.0
@@ -108,37 +110,59 @@ if args.serve == True:  # server mode, run in this mode to tell potential client
                         raise(ValueError('Out of addresses.'))
 else: # client mode. run in this mode to get: the server's public key, the next available IP and the server's listening port
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    sock.settimeout(10)  # set the connection timeout to this many seconds
+    ret_code = 1  # default error
+    
+    # Connect to server (with retries)
+    t0 = time.time()
+    while (time.time()-t0) < connection_timeout_s:
+        try:
+            sock.connect((args.arg, this_server_port))
+        except Exception as e:
+            pass
+
+        try:
+            peerinfo = sock.getpeername()
+            if len(peerinfo) == 2:
+                ret_code = 1  # default error
+                break  # break out of connection loop
+        except Exception as e:
+            pass
+
+        ret_code = 2  # connection timeout error
 
     try:
-        # Connect to server and send data
-        sock.connect((args.arg, this_server_port))
-        sock.sendall(args.pubkey.encode())
+        if ret_code == 1:  # we connected
+            # send data
+            sock.sendall(args.pubkey.encode())
 
-        # Receive data from the server and shut down
-        result = sock.recv(1024).decode()
-        rltlen = len(result)
-        if rltlen >= (pubkey_len+7):
-            server_key = result[:pubkey_len]
-            not_server_key = result[pubkey_len:]
-            my_ip, server_port = not_server_key.split(',')
-            my_ip = ipaddress.ip_address(my_ip)  # convert to ip
-            server_port = int(server_port)
-            my_network = ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False)
-            wg_server = args.arg  # wg_server must run on the same host as wg-request server
-            print("[Interface]")
-            print(f"Address = {my_ip}/{CIDR}")
-            print(f"PrivateKey = {args.private_key}")
-            print()
-            print("[Peer]")
-            print("# who? (the server)")
-            print(f"PublicKey = {server_key}")
-            print(f"AllowedIPs = {my_network.network_address+1}/32, {my_network}")
-            print("PersistentKeepalive = 25")
-            print(f"Endpoint = {wg_server}:{server_port}")
-    except:
-      ret_code = 1
-    else:
-      ret_code = 0
+            # Receive data from the server and shut down
+            result = sock.recv(1024).decode()
+            rltlen = len(result)
+            if rltlen >= (pubkey_len+7):
+                server_key = result[:pubkey_len]
+                not_server_key = result[pubkey_len:]
+                my_ip, server_port = not_server_key.split(',')
+                my_ip = ipaddress.ip_address(my_ip)  # convert to ip
+                server_port = int(server_port)
+                my_network = ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False)
+                wg_server = args.arg  # wg_server must run on the same host as wg-request server
+                print("[Interface]")
+                print(f"Address = {my_ip}/{CIDR}")
+                print(f"PrivateKey = {args.private_key}")
+                print()
+                print("[Peer]")
+                print("# who? (the server)")
+                print(f"PublicKey = {server_key}")
+                print(f"AllowedIPs = {my_network.network_address+1}/32, {my_network}")
+                print("PersistentKeepalive = 25")
+                print(f"Endpoint = {wg_server}:{server_port}")
+                ret_code = 0  # no error
+            else:
+                ret_code = 3  # bad retlen error
+    except Exception as e:
+          ret_code = 4  # crash after connection error
     finally:
         sock.close()
-        sys.exit(ret_code)
+
+    sys.exit(ret_code)
