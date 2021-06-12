@@ -24,18 +24,20 @@ curl -fsSL -o /bin/wg-request https://raw.githubusercontent.com/greyltc/wg-reque
 chmod +x /bin/wg-request >/dev/null 2>/dev/null
 
 wg genkey | tee /tmp/peer_A.key | wg pubkey > /tmp/peer_A.pub
-timeout 5 python3 /bin/wg-request --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/dev/null
-if test "${?}" = "0"
+timeout 5 python3 /bin/wg-request --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/tmp/teh_err
+rslt=$?
+rm /tmp/peer_A.key >/dev/null 2>/dev/null
+rm /tmp/peer_A.pub >/dev/null 2>/dev/null
+if test "${rslt}" = "0"
 then
   echo "New config written to /etc/wireguard/${IFACE}.conf"
   cat "/etc/wireguard/${IFACE}.conf"
+  wg-quick down "${IFACE}" >/dev/null 2>/dev/null
+  wg-quick up "${IFACE}" >/dev/null 2>/dev/null
+  systemctl enable "wg-quick@${IFACE}" >/dev/null 2>/dev/null
+  rslt=0
 else
   echo "New config NOT written to /etc/wireguard/${IFACE}.conf"
   rm "/etc/wireguard/${IFACE}.conf"
 fi
-wg-quick down "${IFACE}" >/dev/null 2>/dev/null
-wg-quick up "${IFACE}" >/dev/null 2>/dev/null
-systemctl enable "wg-quick@${IFACE}" >/dev/null 2>/dev/null
-
-rm /tmp/peer_A.key >/dev/null 2>/dev/null
-rm /tmp/peer_A.pub >/dev/null 2>/dev/null
+exit ${rslt}
