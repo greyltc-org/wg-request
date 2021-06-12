@@ -31,6 +31,7 @@ then
   cat "/etc/wireguard/${IFACE}.conf"
 else
   echo "New config NOT written to /etc/wireguard/${IFACE}.conf"
+  rm "/etc/wireguard/${IFACE}.conf"
 fi
 wg-quick down "${IFACE}" >/dev/null 2>/dev/null
 wg-quick up "${IFACE}" >/dev/null 2>/dev/null
