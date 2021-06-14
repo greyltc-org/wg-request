@@ -26,8 +26,8 @@ fix_wg_quick(){
   local _broken_service_file="/usr/lib/systemd/system/wg-quick@.service"
   local _fixed_service_file=$(dirname "${_broken_service_file}")/wg-quick-fixed@.service
   cp -f "${_broken_service_file}" "${_fixed_service_file}"
-  sed 's,^[Unit],[Unit]\nStartLimitBurst=0,g' -i "${_fixed_service_file}"
-  sed 's,^[Service],[Service]\nRestart=on-failure\nRestartSec=3,g' -i "${_fixed_service_file}"
+  sed 's,^\[Unit\],[Unit]\nStartLimitBurst=0,' -i "${_fixed_service_file}"
+  sed 's,^\[Service\],[Service]\nRestart=on-failure\nRestartSec=3,' -i "${_fixed_service_file}"
   systemctl daemon-reload
 }
 
@@ -53,7 +53,7 @@ rslt=$?
 rm -f /tmp/wg-request >/dev/null 2>/dev/null
 rm -f /tmp/peer_A.key >/dev/null 2>/dev/null
 rm -f /tmp/peer_A.pub >/dev/null 2>/dev/null
-if test "${rslt}" = "0"
+if test ${rslt} -eq 0
 then
   echo "New config written to /etc/wireguard/${IFACE}.conf"
   cat "/etc/wireguard/${IFACE}.conf"
