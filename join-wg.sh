@@ -25,7 +25,7 @@ fix_wg_quick(){
   # fix the wg-quick service file because it's not robust enough
   local _broken_service_file="/usr/lib/systemd/system/wg-quick@.service"
   local _fixed_service_file=$(dirname "${_broken_service_file}")/wg-quick-fixed@.service
-  cp -f "${_broken_service_file}" "${_fixed_service_file}"
+  cp -af "${_broken_service_file}" "${_fixed_service_file}"
   sed 's,^\[Unit\],[Unit]\nStartLimitBurst=0,' -i "${_fixed_service_file}"
   sed 's,^\[Service\],[Service]\nRestart=on-failure\nRestartSec=3,' -i "${_fixed_service_file}"
   systemctl daemon-reload
