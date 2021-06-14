@@ -5,7 +5,7 @@
 if test $EUID -ne 0
 then
   echo "Please run with root permissions"
-  exit 1
+  exit 10
 fi
 
 if test -z "${2}"
@@ -13,7 +13,7 @@ then
   if test -f /etc/wireguard/wg0.conf
   then
     echo "/etc/wireguard/wg0.conf already exists. You must specify an interface manually"
-    exit 2
+    exit 11
   fi
 fi
 
@@ -31,14 +31,28 @@ fix_wg_quick(){
   systemctl daemon-reload
 }
 
-curl -fsSL -o /bin/wg-request https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request >/dev/null 2>/dev/null
-chmod +x /bin/wg-request >/dev/null 2>/dev/null
+which wg-request >/dev/null 2>/dev/null
+wret=$?
+if test $wret -ne 0
+then
+  rm -f /tmp/wg-request
+  curl --retry-max-time 0 --retry 999 -fsSL -o /tmp/wg-request https://raw.githubusercontent.com/greyltc/wg-request/master/wg-request >/dev/null 2>/dev/null
+  if test ! -f /tmp/wg-request
+  then
+    exit 12
+  fi
+  chmod +x /tmp/wg-request >/dev/null 2>/dev/null
+  run_cmd="python3 /tmp/wg-request"
+else
+  run_cmd="wg-request"
+fi
 
 wg genkey | tee /tmp/peer_A.key | wg pubkey > /tmp/peer_A.pub
-timeout 5 python3 /bin/wg-request --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/dev/null
+timeout 65 ${run_cmd} --private-key $(cat /tmp/peer_A.key) $(cat /tmp/peer_A.pub) "${PEER}" > "/etc/wireguard/${IFACE}.conf" 2>/dev/null
 rslt=$?
-rm /tmp/peer_A.key >/dev/null 2>/dev/null
-rm /tmp/peer_A.pub >/dev/null 2>/dev/null
+rm -f /tmp/wg-request >/dev/null 2>/dev/null
+rm -f /tmp/peer_A.key >/dev/null 2>/dev/null
+rm -f /tmp/peer_A.pub >/dev/null 2>/dev/null
 if test "${rslt}" = "0"
 then
   echo "New config written to /etc/wireguard/${IFACE}.conf"
