@@ -11,8 +11,10 @@ import time
 this_server_port = 43454  # port that the wg-request server listens on
 listen_ip = "0.0.0.0"  # ip address the wg-request server will listen on
 pubkey_len = 44
-CIDR = '24'
+CIDR = '24'  # controls what gets sent to peer (impacts AllowedIPs)
 connection_timeout_s = 60  # try to connect for this many seconds in client mode
+set_network_dns = True
+all_traffic_to_peer = False
 
 # server usage example:
 # wg-request --serve serverpublickey 10.32.40.0
@@ -148,13 +150,18 @@ else: # client mode. run in this mode to get: the server's public key, the next 
                 my_network = ipaddress.ip_network(str(my_ip)+'/'+CIDR, strict=False)
                 wg_server = args.arg  # wg_server must run on the same host as wg-request server
                 print("[Interface]")
-                print(f"Address = {my_ip}/{CIDR}")
+                print(f"Address = {my_ip}/32")
                 print(f"PrivateKey = {args.private_key}")
+                if set_network_dns == True:
+                    print(f"DNS = {my_network.network_address+1}")
                 print()
                 print("[Peer]")
                 print("# who? (the server)")
                 print(f"PublicKey = {server_key}")
-                print(f"AllowedIPs = {my_network.network_address+1}/32, {my_network}")
+                if all_traffic_to_peer == True:
+                    print("0.0.0.0/0, ::/0")
+                else:
+                    print(f"AllowedIPs = {my_network}")
                 print("PersistentKeepalive = 25")
                 print(f"Endpoint = {wg_server}:{server_port}")
                 ret_code = 0  # no error
